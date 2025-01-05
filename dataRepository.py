@@ -18,6 +18,14 @@ if not User.table_exists():
 def getUser(username) -> User:
     return User.get_or_none(User.username == username)
 
+def isAdmin(username, password):
+    user: User = getUser(username)
+    if not user or user.password != password:
+        return 'passwordOrUsernameIsIncorrect'
+    if user.rightsLevel < 2:
+        return 'accessError'
+    return 'ok'
+#add status
 class Items(Model):
     id = AutoField()
     name = CharField()
@@ -26,7 +34,32 @@ class Items(Model):
     class Meta:
         database = db
         only_save_dirty = True
-    
+
+if not Items.table_exists():
+    Items.create_table()
+    print("Table 'Items' created")
+
+def createItem(name, description, amount):
+    item: Items = Items.get_or_none(Items.name == name, Items.description == description)
+    if not item:
+        Items.create(name = name, description = description, amount = amount).save()
+    else:
+        item.amount += amount
+        item.save()
+
+
+def getItemsOnPage(n) -> list[Items]:
+    items = []
+    for item in Items.select().paginate(n, 10):
+        items.append({
+            'name': item.name,
+            'amount': str(item.amount),
+            'description': item.description
+        })
+    return items
+
+
+
 class ItemRequests(Model):
     id = AutoField()
     isCustom = BooleanField()
