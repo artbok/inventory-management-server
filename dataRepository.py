@@ -13,6 +13,7 @@ class User(Model):
 
 if not User.table_exists():
     User.create_table()
+    User.create(username = "bebra", password = "12345", rightsLevel = 2).save()
     print("Table 'User' created")
 
 def getUser(username) -> User:
