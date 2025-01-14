@@ -25,10 +25,10 @@ def registerNewUser():
 @app.route('/authUser', methods=['POST'])
 def userAuth():
     data = request.json 
-    user: User = getUser(data["username"])
-    if not user or user.password != data["password"]:
+    if not isUser(data["username"], data["password"]):
         return jsonify({'status': 'invalidLogin'})
-    return jsonify({'status': 'ok'})
+    user: User = getUser(data["username"])
+    return jsonify({'status': 'ok', 'rightsLevel': user.rightsLevel})
 
 
 @app.route('/newItem', methods=['POST'])
@@ -39,20 +39,16 @@ def newItem():
     return jsonify({'status': status})
 
 
-@app.route('/getItems', methods=['POST'])
-def getItems():
-    data = request.json
-    status = isAdmin(data["username"], data["password"])
-    if status != 'ok':
-        return jsonify({'status': status})
-    return jsonify({'status': status, 'totalPages': ceil(Items.select().count() / 10), 'data': getItemsOnPage(int(data["page"]))})
-
-@app.route('/getUsersItems', method=['POST'])
+@app.route('/getItems', method=['POST'])
 def getUsersItems():
     data = request.json
-    name = data["owner"]
-    status = isAdmin(data["username"], data["password"])
-    totalPages = ceil(Items.select().where(Items.owner == name).count() / 10)
-    if status != "ok" or data["username"] != name:
-        return jsonify({'status': status, "totalPages": totalPages, 'data': getUsersItemsOnPage(int(data["page"]), data['username'])})
+    if data["owner"]:
+        totalPages = ceil(Items.select().where(Items.owner == data["owner"]).count() / 10)
+        items = getItemsOnPage(int(data["page"]), data['username'])
+    else:
+        totalPages = ceil(Items.select().count() / 10)
+        items = getItemsOnPage(int(data["page"]))
+    if not isUser(data["username"], data["password"]):
+        return jsonify({'status': "authError"})
+    return jsonify({'status': 'ok', "totalPages": totalPages, 'data': items})
 app.run()

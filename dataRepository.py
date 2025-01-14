@@ -26,6 +26,13 @@ def isAdmin(username, password):
     if user.rightsLevel < 2:
         return 'accessError'
     return 'ok'
+
+def isUser(username, password):
+    user: User = getUser(username)
+    if user and user.password == password:
+        return True
+    return False
+
 #add status
 class Items(Model):
     id = AutoField()
@@ -49,24 +56,19 @@ def createItem(name, description, amount):
         item.save()
 
 
-def getItemsOnPage(n) -> list[Items]:
+def getItemsOnPage(n, owner: None) -> list[Items]:
     items = []
-    for item in Items.select().paginate(n, 10):
+    if owner:
+        source = Items.select().where(Items.owner == name).paginate(n, 10)
+    else:
+        source = Items.select().paginate(n, 10)
+    for item in source:
         items.append({
             'name': item.name,
             'amount': str(item.amount),
             'description': item.description
         })
     return items
-def getUsersItemsOnPage(n, name) -> list[Items]:
-    UsersItems = []
-    for item in Items.select().where(Items.owner == name).paginate(n, 10):
-        UsersItems.append({
-            "name": item.name,
-            "amount": item.amount,
-            "description": item.description
-        })
-    return UsersItems 
 
 
 class ItemRequests(Model):
