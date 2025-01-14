@@ -46,4 +46,13 @@ def getItems():
     if status != 'ok':
         return jsonify({'status': status})
     return jsonify({'status': status, 'totalPages': ceil(Items.select().count() / 10), 'data': getItemsOnPage(int(data["page"]))})
+
+@app.route('/getUsersItems', method=['POST'])
+def getUsersItems():
+    data = request.json
+    name = data["owner"]
+    status = isAdmin(data["username"], data["password"])
+    totalPages = ceil(Items.select().where(Items.owner == name).count() / 10)
+    if status != "ok" or data["username"] != name:
+        return jsonify({'status': status, "totalPages": totalPages, 'data': getUsersItemsOnPage(int(data["page"]), data['username'])})
 app.run()

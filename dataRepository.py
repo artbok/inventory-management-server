@@ -58,7 +58,15 @@ def getItemsOnPage(n) -> list[Items]:
             'description': item.description
         })
     return items
-
+def getUsersItemsOnPage(n, name) -> list[Items]:
+    UsersItems = []
+    for item in Items.select().where(Items.owner == name).paginate(n, 10):
+        UsersItems.append({
+            "name": item.name,
+            "amount": item.amount,
+            "description": item.description
+        })
+    return UsersItems 
 
 
 class ItemRequests(Model):
