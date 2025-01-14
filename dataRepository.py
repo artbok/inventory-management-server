@@ -71,18 +71,30 @@ def getItemsOnPage(n, owner: None) -> list[Items]:
     return items
 
 
-class ItemRequests(Model):
+class ItemsRequests(Model):
     id = AutoField()
     isCustom = BooleanField()
-    itemid = IntegerField()
+    itemName = CharField()
     amount = IntegerField()
-    name = CharField()
+    owner = CharField()
     status = CharField()
-    openedDate = DateField()
-    closedDate = DateField()
+    # openedDate = DateField()
+    # closedDate = DateField()
     class Meta:
         database = db
         only_save_dirty = True
+
+
+def getItemsRequests(owner):
+    itemsRequests = []
+    for itemRequest in ItemsRequests.select().where(ItemsRequests.owner == owner):
+        itemsRequests.append({
+            'name': itemRequest.name,
+            'amount': str(itemRequest.amount),
+            'status': itemRequest.status
+        })
+    return itemsRequests
+
 
 class ItemOwners(Model):
     id = AutoField()
@@ -95,8 +107,21 @@ class ItemOwners(Model):
 
 class ReplacementsRequests(Model):
     id = AutoField()
-    itemId = IntegerField()
+    owner = CharField()
+    itemName = CharField()
     amount = IntegerField()
+    status = CharField()
     class Meta:
         database = db
         only_save_dirty = True
+
+
+def getReplacementsRequests(owner):
+    replacementsRequests = []
+    for replacementRequest in ReplacementsRequests.select().where(ReplacementsRequests.owner == owner):
+        replacementsRequests.append({
+            'itemName': replacementRequest.itemName,
+            'amount': replacementRequest.amount,
+            'status': replacementRequest.status 
+        })
+    return replacementsRequests

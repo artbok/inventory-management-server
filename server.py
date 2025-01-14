@@ -39,7 +39,7 @@ def newItem():
     return jsonify({'status': status})
 
 
-@app.route('/getItems', method=['POST'])
+@app.route('/getItems', methods=['POST'])
 def getUsersItems():
     data = request.json
     if data["owner"]:
@@ -47,8 +47,24 @@ def getUsersItems():
         items = getItemsOnPage(int(data["page"]), data['username'])
     else:
         totalPages = ceil(Items.select().count() / 10)
-        items = getItemsOnPage(int(data["page"]))
+        items = getItemsOnPage(int(data["page"]), None)
     if not isUser(data["username"], data["password"]):
         return jsonify({'status': "authError"})
     return jsonify({'status': 'ok', "totalPages": totalPages, 'data': items})
+
+
+@app.route('/getItemsRequests', methods=['POST'])
+def itemsRequests():
+    data = request.json
+    if isUser(data['username'], data['password']):
+        items = getItemsRequests(data['owner'])
+   
+    return jsonify({'status': 'ok', 'data': items})
+
+@app.route('/getReplacementsRequests', methods=['POST'])
+def replacementsRequests():
+    data = request.json
+    if isUser(data['username'], data['password']):
+        items = getReplacementsRequests(data['owner'])
+    return jsonify({'status': 'ok', 'data': items})
 app.run()
