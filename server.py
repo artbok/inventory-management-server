@@ -14,7 +14,7 @@ def add_headers(response):
 
 
 @app.route('/newUser', methods=['POST'])
-def registerNewUser():
+def newUser():
     data = request.json
     if getUser(data["username"]):
         return jsonify({'status': 'userAlreadyExists'})
@@ -23,7 +23,7 @@ def registerNewUser():
 
 
 @app.route('/authUser', methods=['POST'])
-def userAuth():
+def authUser():
     data = request.json 
     if not isUser(data["username"], data["password"]):
         return jsonify({'status': 'invalidLogin'})
@@ -40,7 +40,7 @@ def newItem():
 
 
 @app.route('/getItems', methods=['POST'])
-def getUsersItems():
+def getItems():
     data = request.json
     if isUser(data["username"], data["password"]): 
         if data["owner"]:
@@ -53,15 +53,6 @@ def getUsersItems():
     return jsonify({'status': "authError"})
 
 
-@app.route('/getItemsRequests', methods=['POST'])
-def getItemsRequests():
-    data = request.json
-    if isUser(data['username'], data['password']):
-        items = getItemsRequests(data['owner'])
-        return jsonify({'status': 'ok', 'data': items})
-    return jsonify({'status': "authError"}) 
-
-
 @app.route('newItemRequest', methods=['POST'])
 def newItemRequest():
     data = request.json
@@ -71,13 +62,14 @@ def newItemRequest():
     return jsonify({'status': "authError"})  
 
 
-@app.route('/getReplacementsRequests', methods=['POST'])
-def replacementsRequests():
+@app.route('/getItemsRequests', methods=['POST'])
+def getItemsRequests():
     data = request.json
     if isUser(data['username'], data['password']):
-        items = getReplacementsRequests(data['owner'])
+        items = getItemsRequests(data['owner'])
         return jsonify({'status': 'ok', 'data': items})
-    return jsonify({'status': "authError"})
+    return jsonify({'status': "authError"}) 
+
 
 @app.route('newReplacementRequest', methods=['POST'])
 def newReplacementRequest():
@@ -86,4 +78,15 @@ def newReplacementRequest():
         createReplacementRequest(data["owner"], data["itemName"], data["amount"])
         return jsonify({'status': 'ok'})
     return jsonify({'status': "authError"})
+
+
+@app.route('/getReplacementsRequests', methods=['POST'])
+def getReplacementsRequests():
+    data = request.json
+    if isUser(data['username'], data['password']):
+        items = getReplacementsRequests(data['owner'])
+        return jsonify({'status': 'ok', 'data': items})
+    return jsonify({'status': "authError"})
+
+
 app.run()
