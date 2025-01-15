@@ -1,6 +1,8 @@
 from peewee import *
 
+
 db = SqliteDatabase('data.db')
+
 
 class User(Model):
     id = AutoField()
@@ -11,21 +13,23 @@ class User(Model):
         database = db
         only_save_dirty = True
 
-if not User.table_exists():
-    User.create_table()
-    User.create(username = "bebra", password = "12345", rightsLevel = 2).save()
-    print("Table 'User' created")
+
+def createUser(username, password, rightsLevel):
+    User.create(username = username, password = password, rightsLevel = rightsLevel).save()
+
 
 def getUser(username) -> User:
     return User.get_or_none(User.username == username)
 
+
 def isAdmin(username, password):
     user: User = getUser(username)
     if not user or user.password != password:
-        return 'passwordOrUsernameIsIncorrect'
+        return 'authError'
     if user.rightsLevel < 2:
         return 'accessError'
     return 'ok'
+
 
 def isUser(username, password):
     user: User = getUser(username)
@@ -33,19 +37,22 @@ def isUser(username, password):
         return True
     return False
 
+if not User.table_exists():
+    User.create_table()
+    createUser("bebra", "12345", 2)
+    print("Table 'User' created")
+
+
 #add status
 class Items(Model):
     id = AutoField()
     name = CharField()
-    description = CharField()
+    description = CharField(null=True)
     amount = IntegerField()
     class Meta:
         database = db
         only_save_dirty = True
 
-if not Items.table_exists():
-    Items.create_table()
-    print("Table 'Items' created")
 
 def createItem(name, description, amount):
     item: Items = Items.get_or_none(Items.name == name, Items.description == description)
@@ -71,18 +78,28 @@ def getItemsOnPage(n, owner: None) -> list[Items]:
     return items
 
 
+if not Items.table_exists():
+    Items.create_table()
+    createItem("Золотой тунец", "легендарный", 99)
+    print("Table 'Items' created")
+
+
 class ItemsRequests(Model):
     id = AutoField()
     isCustom = BooleanField()
     itemName = CharField()
     amount = IntegerField()
     owner = CharField()
-    status = CharField()
+    status = CharField(default = "created")
     # openedDate = DateField()
     # closedDate = DateField()
     class Meta:
         database = db
         only_save_dirty = True
+
+
+def createItemRequest(isCustom, itemName, amount, owner):
+    Items.create(isCustom = isCustom, itemName = itemName, amount = amount, owner = owner).save()
 
 
 def getItemsRequests(owner):
@@ -96,24 +113,34 @@ def getItemsRequests(owner):
     return itemsRequests
 
 
+if not ItemsRequests.table_exists():
+    ItemsRequests.create_table()
+    print("Table 'ItemsRequests' created")
+
+
 class ItemOwners(Model):
     id = AutoField()
-    ownerId = IntegerField()
-    itemId = IntegerField()
+    onwer = CharField()
+    itemName = CharField()
     amount = IntegerField()
     class Meta:
         database = db
         only_save_dirty = True
+
 
 class ReplacementsRequests(Model):
     id = AutoField()
     owner = CharField()
     itemName = CharField()
     amount = IntegerField()
-    status = CharField()
+    status = CharField(default='created')
     class Meta:
         database = db
         only_save_dirty = True
+
+
+def createReplacementRequest(owner, itemName, amount):
+    ReplacementsRequests.create(owner = owner, itemName = itemName, amount = amount)
 
 
 def getReplacementsRequests(owner):
@@ -125,3 +152,8 @@ def getReplacementsRequests(owner):
             'status': replacementRequest.status 
         })
     return replacementsRequests
+
+
+if not ReplacementsRequests.table_exists():
+    ReplacementsRequests.create_table()
+    print("Table 'ReplacementsRequests' created")

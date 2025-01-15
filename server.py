@@ -16,9 +16,9 @@ def add_headers(response):
 @app.route('/newUser', methods=['POST'])
 def registerNewUser():
     data = request.json
-    if getUser(data["username"]) != None:
+    if getUser(data["username"]):
         return jsonify({'status': 'userAlreadyExists'})
-    User.create(username = data["username"], password = data["password"], rightsLevel = int(data["rightsLevel"])).save()
+    createUser(data["username"], data["password"], data["rightsLevel"])
     return jsonify({'status': 'ok'})
 
 
@@ -42,29 +42,48 @@ def newItem():
 @app.route('/getItems', methods=['POST'])
 def getUsersItems():
     data = request.json
-    if data["owner"]:
-        totalPages = ceil(Items.select().where(Items.owner == data["owner"]).count() / 10)
-        items = getItemsOnPage(int(data["page"]), data['username'])
-    else:
-        totalPages = ceil(Items.select().count() / 10)
-        items = getItemsOnPage(int(data["page"]), None)
-    if not isUser(data["username"], data["password"]):
-        return jsonify({'status': "authError"})
-    return jsonify({'status': 'ok', "totalPages": totalPages, 'data': items})
+    if isUser(data["username"], data["password"]): 
+        if data["owner"]:
+            totalPages = ceil(Items.select().where(Items.owner == data["owner"]).count() / 10)
+            items = getItemsOnPage(int(data["page"]), data['username'])
+        else:
+            totalPages = ceil(Items.select().count() / 10)
+            items = getItemsOnPage(int(data["page"]), None)
+        return jsonify({'status': 'ok', "totalPages": totalPages, 'data': items})
+    return jsonify({'status': "authError"})
 
 
 @app.route('/getItemsRequests', methods=['POST'])
-def itemsRequests():
+def getItemsRequests():
     data = request.json
     if isUser(data['username'], data['password']):
         items = getItemsRequests(data['owner'])
-   
-    return jsonify({'status': 'ok', 'data': items})
+        return jsonify({'status': 'ok', 'data': items})
+    return jsonify({'status': "authError"}) 
+
+
+@app.route('newItemRequest', methods=['POST'])
+def newItemRequest():
+    data = request.json
+    if isUser(data["username"], data["password"]):
+        createItemRequest(data["isCustom"], data["itemName"], data["amount"], data["owner"])
+        return jsonify({'status': 'ok'})
+    return jsonify({'status': "authError"})  
+
 
 @app.route('/getReplacementsRequests', methods=['POST'])
 def replacementsRequests():
     data = request.json
     if isUser(data['username'], data['password']):
         items = getReplacementsRequests(data['owner'])
-    return jsonify({'status': 'ok', 'data': items})
+        return jsonify({'status': 'ok', 'data': items})
+    return jsonify({'status': "authError"})
+
+@app.route('newReplacementRequest', methods=['POST'])
+def newReplacementRequest():
+    data = request.json
+    if isUser(data['username'], data['password']): 
+        createReplacementRequest(data["owner"], data["itemName"], data["amount"])
+        return jsonify({'status': 'ok'})
+    return jsonify({'status': "authError"})
 app.run()
