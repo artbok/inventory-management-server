@@ -35,35 +35,50 @@ def authUser():
 def newItem():
     data = request.json
     status = isAdmin(data["username"], data["password"])
-    createItem(data["name"], data["description"], int(data["amount"]))
+    createItem(data["name"], data["description"], int(data["quantity"]))
     return jsonify({'status': status})
 
 
 @app.route('/getItems', methods=['POST'])
-def getItems():
+def items():
     data = request.json
     if isUser(data["username"], data["password"]): 
-        if data["owner"]:
-            totalPages = ceil(Items.select().where(Items.owner == data["owner"]).count() / 10)
-            items = getItemsOnPage(int(data["page"]), data['username'])
-        else:
-            totalPages = ceil(Items.select().count() / 10)
-            items = getItemsOnPage(int(data["page"]), None)
+        totalPages = ceil(Items.select().count() / 10)
+        items = getStorageItemsOnPage(int(data["page"]))
+        return jsonify({'status': 'ok', "totalPages": totalPages, 'data': items, 'users': getUsers()})
+    return jsonify({'status': "authError"})
+
+
+@app.route('/getUsersItems', methods=['POST'])
+def usersItems():
+    data = request.json
+    if isUser(data["username"], data["password"]): 
+        totalPages = ceil(ItemOwners.select().where(ItemOwners.owner == data["owner"]).count() / 10)
+        items = getUsersItems(data["owner"], int(data["page"]))
         return jsonify({'status': 'ok', "totalPages": totalPages, 'data': items})
     return jsonify({'status': "authError"})
 
 
-@app.route('newItemRequest', methods=['POST'])
+@app.route('/giveItem', methods=['POST'])
+def giveItem():
+    data = request.json
+    if isUser(data["username"], data["password"]): 
+        addOwnerForItem(data["user"], data["itemName"], data["description"], data["quantity"])
+        return jsonify({'status': "ok"})
+    return jsonify({'status': "authError"})
+
+
+@app.route('/newItemRequest', methods=['POST'])
 def newItemRequest():
     data = request.json
     if isUser(data["username"], data["password"]):
-        createItemRequest(data["isCustom"], data["itemName"], data["amount"], data["owner"])
+        createItemRequest(data["isCustom"], data["itemName"], data["quantity"], data["owner"])
         return jsonify({'status': 'ok'})
     return jsonify({'status': "authError"})  
 
 
 @app.route('/getItemsRequests', methods=['POST'])
-def getItemsRequests():
+def itemsRequests():
     data = request.json
     if isUser(data['username'], data['password']):
         items = getItemsRequests(data['owner'])
@@ -71,17 +86,17 @@ def getItemsRequests():
     return jsonify({'status': "authError"}) 
 
 
-@app.route('newReplacementRequest', methods=['POST'])
+@app.route('/newReplacementRequest', methods=['POST'])
 def newReplacementRequest():
     data = request.json
     if isUser(data['username'], data['password']): 
-        createReplacementRequest(data["owner"], data["itemName"], data["amount"])
+        createReplacementRequest(data["owner"], data["itemName"], data["quantity"])
         return jsonify({'status': 'ok'})
     return jsonify({'status': "authError"})
 
 
 @app.route('/getReplacementsRequests', methods=['POST'])
-def getReplacementsRequests():
+def replacementsRequests():
     data = request.json
     if isUser(data['username'], data['password']):
         items = getReplacementsRequests(data['owner'])
