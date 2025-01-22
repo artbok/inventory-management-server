@@ -113,15 +113,15 @@ class ItemsRequests(Model):
 
 
 def createItemRequest(isCustom, itemName, quantity, owner):
-    Items.create(isCustom = isCustom, itemName = itemName, quantity = quantity, owner = owner).save()
+    ItemsRequests.create(isCustom = isCustom, itemName = itemName, quantity = quantity, owner = owner).save()
 
 
 def getItemsRequests(owner):
     itemsRequests = []
     for itemRequest in ItemsRequests.select().where(ItemsRequests.owner == owner):
         itemsRequests.append({
-            'name': itemRequest.name,
-            'quantity': str(itemRequest.quantity),
+            'itemName': itemRequest.itemName,
+            'quantity': itemRequest.quantity,
             'status': itemRequest.status
         })
     return itemsRequests
@@ -197,7 +197,6 @@ def getReplacementsRequests(owner):
             'status': replacementRequest.status 
         })
     return replacementsRequests
-
 
 if not ReplacementsRequests.table_exists():
     ReplacementsRequests.create_table()
