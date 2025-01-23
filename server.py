@@ -90,7 +90,7 @@ def itemsRequests():
 def newReplacementRequest():
     data = request.json
     if isUser(data['username'], data['password']): 
-        createReplacementRequest(data["owner"], data["itemName"], data["quantity"])
+        createReplacementRequest(data["owner"], data["itemName"], data["description"], data["quantity"])
         return jsonify({'status': 'ok'})
     return jsonify({'status': "authError"})
 

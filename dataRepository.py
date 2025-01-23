@@ -142,8 +142,10 @@ class ItemOwners(Model):
         database = db
         only_save_dirty = True
 
+
 def getItemOwner(owner, itemName, description):
     return ItemOwners.get_or_none(ItemOwners.owner == owner, ItemOwners.itemName == itemName, ItemOwners.description == description)
+
 
 def addOwnerForItem(owner, itemName, description, quantity):
     item: Items = getItem(itemName, description)
@@ -184,8 +186,16 @@ class ReplacementsRequests(Model):
         only_save_dirty = True
 
 
-def createReplacementRequest(owner, itemName, quantity):
-    ReplacementsRequests.create(owner = owner, itemName = itemName, quantity = quantity)
+def createReplacementRequest(owner, itemName, description, quantity):
+    item: ItemOwners = getItemOwner(owner, itemName, description)
+    item.quantity -= quantity
+    if item.quantity == 0:
+        item.delete_instance()
+    item: Items = getItem(itemName, description)
+    item.quantity -= quantity
+    if item.quantity == 0:
+        item.delete_instance()
+    ReplacementsRequests.create(owner = owner, itemName = itemName, quantity = quantity).save()
 
 
 def getReplacementsRequests(owner):
