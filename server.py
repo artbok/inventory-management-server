@@ -55,7 +55,8 @@ def items():
     if isUser(data["username"], data["password"]): 
         totalPages = ceil(Items.select().count() / 10)
         items = getStorageItemsOnPage(int(data["page"]))
-        return jsonify({'status': 'ok', "totalPages": totalPages, 'data': items, 'users': getUsers()})
+        users = getUsers()
+        return jsonify({'status': 'ok', "totalPages": totalPages, 'data': items, 'users': users})
     return jsonify({'status': "authError"})
 
 
@@ -73,7 +74,7 @@ def usersItems():
 def giveItem():
     data = request.json
     if isUser(data["username"], data["password"]): 
-        addOwnerForItem(data["user"], data["itemId"], data["itemName"], data["description"], data["quantity"])
+        addOwnerForItem(data["user"], data["itemId"], data["quantity"])
         return jsonify({'status': "ok"})
     return jsonify({'status': "authError"})
 
@@ -100,7 +101,7 @@ def itemsRequests():
 def newReplacementRequest():
     data = request.json
     if isUser(data['username'], data['password']): 
-        createReplacementRequest(data["owner"], data["itemName"], data["description"], data["quantity"])
+        createReplacementRequest(data["owner"], data["itemId"], data["quantity"])
         return jsonify({'status': 'ok'})
     return jsonify({'status': "authError"})
 

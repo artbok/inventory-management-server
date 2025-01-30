@@ -99,9 +99,9 @@ def getStorageItemsOnPage(page) -> list[Items]:
         items.append({
             'id': item.id,
             'name': item.name,
+            'description': item.description,
             'quantity': item.quantity,
             'quantityInStorage': item.quantityInStorage,
-            'description': item.description,
             "status": item.status
         })
     return items
@@ -143,8 +143,8 @@ def getItemsRequests(owner):
         requests.append({
             'itemId': itemRequest.itemId,
             'itemName': itemRequest.itemName,
-            'description': itemRequest.description,
-            'quantity': itemRequest.quantity,
+            'itemDescription': itemRequest.itemDescription,
+            'itemQuantity': itemRequest.itemQuantity,
             'owner': itemRequest.owner,
             'status': itemRequest.status
         })
@@ -180,7 +180,7 @@ def addOwnerForItem(owner, itemId, quantity):
     item.save()
     itemOwner = getItemOwner(owner, itemId)
     if not itemOwner:
-        ItemOwners.create(owner = owner, itemId = itemId, itemName = itemName, description = description, quantity = quantity).save()
+        ItemOwners.create(owner = owner, itemId = itemId, itemName = item.name, itemDescription = item.description, itemQuantity = quantity).save()
     else:
         itemOwner.quantity += quantity
         itemOwner.save()
@@ -190,9 +190,10 @@ def getUsersItems(owner, page):
     usersItems = []
     for userItem in ItemOwners.select().where(ItemOwners.owner == owner).paginate(page, 10):
         usersItems.append({
-            'itemName': userItem.itemName,
-            'description': userItem.description,
-            'quantity': userItem.quantity,
+            'id': userItem.itemId,
+            'name': userItem.itemName,
+            'description': userItem.itemDescription,
+            'quantity': userItem.itemQuantity,
         })
     return usersItems
 
@@ -216,16 +217,23 @@ class ReplacementsRequests(Model):
         order_by = ['owner']
 
 
-def createReplacementRequest(owner, itemId, itemQuantity):
-    item: ItemOwners = getItemOwner(owner, itemId)
-    item.quantity -= itemQuantity
-    if item.quantity == 0:
-        item.delete_instance()
+def createReplacementRequest(owner, itemId, quantity):
+    request: ReplacementsRequests = ReplacementsRequests.get_or_none().where(ReplacementsRequests.itemId == itemId, ReplacementsRequests.owner == owner, ReplacementsRequests.status == "created")
+    if request:
+        request.itemQuantity += quantity
+        request.save()
+    else:
+        ReplacementsRequests.create(owner = owner, itemId = itemId, itemName = item.name, itemDescription = item.description, itemQuantity = quantity).save()
+    itemOwner: ItemOwners = getItemOwner(owner, itemId)
+    itemOwner.itemQuantity -= quantity
+    itemOwner.save()
+    if itemOwner.itemQuantity == 0:
+        itemOwner.delete_instance()
     item: Items = getItem(itemId)
-    item.quantity -= itemQuantity
+    item.quantity -= quantity
+    item.save()
     if item.quantity == 0:
         item.delete_instance()
-    ReplacementsRequests.create(owner = owner, itemName = item.name, description = item.description, quantity = itemQuantity).save()
 
 
 def getReplacementsRequests(owner):
@@ -238,8 +246,8 @@ def getReplacementsRequests(owner):
     for replacementRequest in requests:
         items.append({
             'itemName': replacementRequest.itemName,
-            'description': replacementRequest.description,
-            'quantity': replacementRequest.quantity,
+            'description': replacementRequest.itemDescription,
+            'quantity': replacementRequest.itemQuantity,
             'status': replacementRequest.status 
         })
     return items
