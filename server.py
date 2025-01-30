@@ -35,7 +35,17 @@ def authUser():
 def newItem():
     data = request.json
     status = isAdmin(data["username"], data["password"])
-    createItem(data["name"], data["description"], int(data["quantity"]))
+    if status == 'ok':
+        createItem(data["name"], data["description"], data["quantity"])
+    return jsonify({'status': status})
+
+
+@app.route('/editItem', methods=['POST'])
+def edit_item():
+    data = request.json
+    status = isAdmin(data["username"], data["password"])
+    if status == 'ok':
+        editItem(data["itemId"], data["newName"], data["newQuantity"], data["newDescription"])
     return jsonify({'status': status})
 
 
@@ -53,8 +63,8 @@ def items():
 def usersItems():
     data = request.json
     if isUser(data["username"], data["password"]): 
-        totalPages = ceil(ItemOwners.select().where(ItemOwners.owner == data["owner"]).count() / 10)
-        items = getUsersItems(data["owner"], int(data["page"]))
+        totalPages = ceil(ItemOwners.select().where(ItemOwners.owner == data["username"]).count() / 10)
+        items = getUsersItems(data["username"], data["page"])
         return jsonify({'status': 'ok', "totalPages": totalPages, 'data': items})
     return jsonify({'status': "authError"})
 
@@ -63,7 +73,7 @@ def usersItems():
 def giveItem():
     data = request.json
     if isUser(data["username"], data["password"]): 
-        addOwnerForItem(data["user"], data["itemName"], data["description"], data["quantity"])
+        addOwnerForItem(data["user"], data["itemId"], data["itemName"], data["description"], data["quantity"])
         return jsonify({'status': "ok"})
     return jsonify({'status': "authError"})
 
@@ -72,7 +82,7 @@ def giveItem():
 def newItemRequest():
     data = request.json
     if isUser(data["username"], data["password"]):
-        createItemRequest(data["isCustom"], data["itemName"], data["quantity"], data["owner"])
+        createItemRequest(data["itemId"], data["itemName"], data["itemDescription"], data["itemQuantity"], data["username"])
         return jsonify({'status': 'ok'})
     return jsonify({'status': "authError"})  
 

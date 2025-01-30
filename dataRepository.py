@@ -12,6 +12,7 @@ class User(Model):
     class Meta:
         database = db
         only_save_dirty = True
+        order_by = ['name']
 
 
 def createUser(name, password, rightsLevel):
@@ -22,7 +23,7 @@ def getUser(name) -> User:
     return User.get_or_none(User.name == name)
 
 
-def isAdmin(name, password):
+def isAdmin(name, password) -> str:
     user: User = getUser(name)
     if not user or user.password != password:
         return 'authError'
@@ -31,14 +32,14 @@ def isAdmin(name, password):
     return 'ok'
 
 
-def isUser(name, password):
+def isUser(name, password) -> bool:
     user: User = getUser(name)
     if user and user.password == password:
         return True
     return False
 
 
-def getUsers():
+def getUsers() -> list[User]:
     users = []
     for user in User.select().where(User.rightsLevel == 1):
         users.append(user.name)
@@ -52,24 +53,25 @@ if not User.table_exists():
     print("Table 'User' created")
 
 
-#add status
 class Items(Model):
     id = AutoField()
     name = CharField()
     description = CharField(null=True)
     quantity = IntegerField()
     quantityInStorage = IntegerField()
+    status = CharField(default="Новый")
     class Meta:
         database = db
         only_save_dirty = True
+        order_by = ['name']
 
 
-def getItem(name, description) -> Items:
-    return Items.get_or_none(Items.name == name, Items.description == description)
+def getItem(id) -> Items:
+    return Items.get_or_none(Items.id == id)
 
 
-def createItem(name, description, quantity):
-    item: Items = getItem(name, description)
+def createItem(name, description, quantity) -> None:
+    item: Items = Items.get_or_none(Items.name == name, Items.description == description)
     if not item:
         Items.create(name = name, description = description, quantity = quantity, quantityInStorage = quantity).save()
     else:
@@ -78,14 +80,29 @@ def createItem(name, description, quantity):
         item.save()
 
 
+def editItem(itemId, newName, newQuantity, newDescription) -> None:
+    item: Items = getItem(itemId)
+    item.name = newName
+    item.description = newDescription
+    item.quantityInStorage = newQuantity - (item.quantity - item.quantityInStorage)
+    item.quantity = newQuantity
+    item.save()
+    for itemOwner in ItemOwners.select().where(ItemOwners.itemId == itemId):
+        itemOwner.itemName = newName
+        itemOwner.description = newDescription
+        itemOwner.save()
+
+
 def getStorageItemsOnPage(page) -> list[Items]:
     items = []
     for item in Items.select().paginate(page, 10):
         items.append({
+            'id': item.id,
             'name': item.name,
             'quantity': item.quantity,
             'quantityInStorage': item.quantityInStorage,
-            'description': item.description
+            'description': item.description,
+            "status": item.status
         })
     return items
 
@@ -100,31 +117,38 @@ if not Items.table_exists():
 
 class ItemsRequests(Model):
     id = AutoField()
-    isCustom = BooleanField()
+    itemId = IntegerField(null=True)
     itemName = CharField()
-    quantity = IntegerField()
+    itemDescription = CharField()
+    itemQuantity = IntegerField()
     owner = CharField()
-    status = CharField(default = "created")
-    # openedDate = DateField()
-    # closedDate = DateField()
+    status = CharField(default="Ожидает ответа")
     class Meta:
         database = db
         only_save_dirty = True
+        order_by = ['owner']
 
 
-def createItemRequest(isCustom, itemName, quantity, owner):
-    ItemsRequests.create(isCustom = isCustom, itemName = itemName, quantity = quantity, owner = owner).save()
+def createItemRequest(itemId, itemName, itemDescription, itemQuantity, owner):
+    ItemsRequests.create(itemId = itemId, itemName = itemName, itemDescription = itemDescription, itemQuantity = itemQuantity, owner = owner).save()
 
 
 def getItemsRequests(owner):
-    itemsRequests = []
-    for itemRequest in ItemsRequests.select().where(ItemsRequests.owner == owner):
-        itemsRequests.append({
+    if owner == None:
+        itemsRequests = ItemsRequests.select()
+    else:
+        itemsRequests = ItemsRequests.select().where(ItemsRequests.owner == owner)
+    requests = []
+    for itemRequest in itemsRequests:
+        requests.append({
+            'itemId': itemRequest.itemId,
             'itemName': itemRequest.itemName,
+            'description': itemRequest.description,
             'quantity': itemRequest.quantity,
+            'owner': itemRequest.owner,
             'status': itemRequest.status
         })
-    return itemsRequests
+    return requests
 
 
 if not ItemsRequests.table_exists():
@@ -135,25 +159,28 @@ if not ItemsRequests.table_exists():
 class ItemOwners(Model):
     id = AutoField()
     owner = CharField()
+    itemId = IntegerField()
     itemName = CharField()
-    description = CharField(null=True)
-    quantity = IntegerField()
+    itemDescription = CharField(null=True)
+    itemQuantity = IntegerField()
+    itemStatus = CharField(default="Используемый")
     class Meta:
         database = db
         only_save_dirty = True
+        order_by = ['owner']
 
 
-def getItemOwner(owner, itemName, description):
-    return ItemOwners.get_or_none(ItemOwners.owner == owner, ItemOwners.itemName == itemName, ItemOwners.description == description)
+def getItemOwner(owner, itemId):
+    return ItemOwners.get_or_none(ItemOwners.owner == owner, ItemOwners.itemId == itemId)
 
 
-def addOwnerForItem(owner, itemName, description, quantity):
-    item: Items = getItem(itemName, description)
+def addOwnerForItem(owner, itemId, quantity):
+    item: Items = getItem(itemId)
     item.quantityInStorage -= quantity
     item.save()
-    itemOwner = getItemOwner(owner, itemName, description)
+    itemOwner = getItemOwner(owner, itemId)
     if not itemOwner:
-        ItemOwners.create(owner = owner, itemName = itemName, description = description, quantity = quantity).save()
+        ItemOwners.create(owner = owner, itemId = itemId, itemName = itemName, description = description, quantity = quantity).save()
     else:
         itemOwner.quantity += quantity
         itemOwner.save()
@@ -178,36 +205,58 @@ if not ItemOwners.table_exists():
 class ReplacementsRequests(Model):
     id = AutoField()
     owner = CharField()
+    itemId = IntegerField()
     itemName = CharField()
-    quantity = IntegerField()
+    itemDescription = CharField(null=True)
+    itemQuantity = IntegerField()
     status = CharField(default='created')
     class Meta:
         database = db
         only_save_dirty = True
+        order_by = ['owner']
 
 
-def createReplacementRequest(owner, itemName, description, quantity):
-    item: ItemOwners = getItemOwner(owner, itemName, description)
-    item.quantity -= quantity
+def createReplacementRequest(owner, itemId, itemQuantity):
+    item: ItemOwners = getItemOwner(owner, itemId)
+    item.quantity -= itemQuantity
     if item.quantity == 0:
         item.delete_instance()
-    item: Items = getItem(itemName, description)
-    item.quantity -= quantity
+    item: Items = getItem(itemId)
+    item.quantity -= itemQuantity
     if item.quantity == 0:
         item.delete_instance()
-    ReplacementsRequests.create(owner = owner, itemName = itemName, quantity = quantity).save()
+    ReplacementsRequests.create(owner = owner, itemName = item.name, description = item.description, quantity = itemQuantity).save()
 
 
 def getReplacementsRequests(owner):
-    replacementsRequests = []
-    for replacementRequest in ReplacementsRequests.select().where(ReplacementsRequests.owner == owner):
-        replacementsRequests.append({
+    items = []
+    if owner == None:
+        requests = ReplacementsRequests.select()
+    else:
+        requests = ReplacementsRequests.select().where(ReplacementsRequests.owner == owner)
+    
+    for replacementRequest in requests:
+        items.append({
             'itemName': replacementRequest.itemName,
+            'description': replacementRequest.description,
             'quantity': replacementRequest.quantity,
             'status': replacementRequest.status 
         })
-    return replacementsRequests
+    return items
 
 if not ReplacementsRequests.table_exists():
     ReplacementsRequests.create_table()
     print("Table 'ReplacementsRequests' created")
+
+class Stats(Model):
+    id = AutoField()
+    totalItemsGiven = IntegerField(default=0)
+    totalReplacements = IntegerField(default=0)
+    class Meta:
+        database = db
+        only_save_dirty = True
+
+if not Stats.table_exists():
+    Stats.create_table()
+    print("Table 'Stats' created")
+
