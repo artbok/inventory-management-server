@@ -93,6 +93,22 @@ def editItem(itemId, newName, newQuantity, newDescription) -> None:
         itemOwner.save()
 
 
+def changeStatus(itemId, quantity, status):
+    curItem: Items = getItem(itemId)
+    curItem.quantity -= quantity
+    curItem.quantityInStorage -= quantity
+    curItem.save()
+    item: Items = Items.get_or_none().where(Items.id == itemId, Items.status == status)
+    if item:
+        item.quantity += quantity
+        item.quantityInStorage += quantity
+        item.save()
+    else:
+        Items.create(name = curItem.name, description = curItem.description, quantity = quantity, quantityInStorage = quantity, status = status)
+    if curItem.quantity == 0:
+        curItem.delete_instance()
+
+
 def getStorageItemsOnPage(page) -> list[Items]:
     items = []
     for item in Items.select().paginate(page, 10):

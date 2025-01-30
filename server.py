@@ -49,6 +49,15 @@ def edit_item():
     return jsonify({'status': status})
 
 
+@app.route('/changeItemStatus', methods=['POST'])
+def changeItemStatus():
+    data = request.json
+    status = isAdmin(data["username"], data["password"])
+    if status == 'ok':
+        changeStatus(data["itemId"], data["quantity"], data["status"])
+    return jsonify({'status': status})
+
+
 @app.route('/getItems', methods=['POST'])
 def items():
     data = request.json
