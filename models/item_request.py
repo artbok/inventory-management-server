@@ -13,7 +13,7 @@ class ItemRequest(BaseModel):
 
 
 def createItemRequest(itemId, itemName, itemDescription, itemQuantity, owner):
-    ItemRequest.create(itemId = itemId, itemName = itemName, itemDescription = itemDescription, itemQuantity = itemQuantity, owner = owner).save()
+    ItemRequest.create(itemId = itemId, itemName = itemName, itemDescription = itemDescription, itemQuantity = itemQuantity, owner = owner)
 
 
 def getItemsRequests(owner):

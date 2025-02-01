@@ -23,7 +23,7 @@ def addOwnerForItem(owner, itemId, quantity):
     item.save()
     itemOwner = getItemOwner(owner, itemId)
     if not itemOwner:
-        ItemOwner.create(owner = owner, itemId = itemId, itemName = item.name, itemDescription = item.description, itemQuantity = quantity).save()
+        ItemOwner.create(owner = owner, itemId = itemId, itemName = item.name, itemDescription = item.description, itemQuantity = quantity)
     else:
         itemOwner.itemQuantity += quantity
         itemOwner.save()

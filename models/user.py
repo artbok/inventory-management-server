@@ -10,7 +10,7 @@ class User(BaseModel):
 
 
 def createUser(name, password, rightsLevel):
-    User.create(name = name, password = password, rightsLevel = rightsLevel).save()
+    User.create(name = name, password = password, rightsLevel = rightsLevel)
 
 
 def getUser(name) -> User:

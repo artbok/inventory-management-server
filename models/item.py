@@ -18,7 +18,7 @@ def getItem(id) -> Item:
 def createItem(name, description, quantity) -> None:
     item: Item = Item.get_or_none(Item.name == name, Item.description == description)
     if not item:
-        Item.create(name = name, description = description, quantity = quantity, quantityInStorage = quantity).save()
+        Item.create(name = name, description = description, quantity = quantity, quantityInStorage = quantity)
     else:
         item.quantity += quantity
         item.quantityInStorage += quantity

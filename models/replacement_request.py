@@ -23,7 +23,7 @@ def createReplacementRequest(owner, itemId, quantity):
         request.itemQuantity += quantity
         request.save()
     else:
-        ReplacementRequest.create(owner = owner, itemId = itemId, itemName = item.name, itemDescription = item.description, itemQuantity = quantity).save()
+        ReplacementRequest.create(owner = owner, itemId = itemId, itemName = item.name, itemDescription = item.description, itemQuantity = quantity)
     itemOwner = getItemOwner(owner, itemId)
     itemOwner.itemQuantity -= quantity
     itemOwner.save()
