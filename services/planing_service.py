@@ -1,16 +1,5 @@
 from peewee import *
-from .database import BaseModel
-
-
-class Planing(BaseModel):
-    id = AutoField()
-    itemName = CharField()
-    itemDescription = CharField()
-    itemQuantity = IntegerField()
-    supplier = CharField()
-    price = IntegerField()
-    completed = BooleanField(default=False)
-
+from models.planing import Planing
 
 
 def createPlaning(itemName, itemDescription, itemQuantity, supplier, price):

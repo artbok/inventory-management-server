@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from models.user import * 
 from models.replacement_request import *
-from math import ceil
+from services.user_service import isUser
+from services.replacement_request_service import *
 
 
 replacement_requests_bp = Blueprint("replacement_requests", __name__)
@@ -16,8 +17,8 @@ def newReplacementRequest():
     return jsonify({'status': "authError"})
 
 
-@replacement_requests_bp.route('/getReplacementsRequests', methods=['POST'])
-def replacementsRequests():
+@replacement_requests_bp.route('/getReplacementRequests', methods=['POST'])
+def get_replacement_requests():
     data = request.json
     if isUser(data['username'], data['password']):
         items = getReplacementsRequests(data['owner'])

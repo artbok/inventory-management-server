@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from models.user import * 
-from models.item_request import *
-
+from services.item_request_service import *
+from services.user_service import isUser
 
 item_requests_bp = Blueprint("item_requests", __name__)
 

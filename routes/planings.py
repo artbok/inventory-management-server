@@ -1,8 +1,6 @@
 from flask import Blueprint, request, jsonify
-from models.user import * 
-from models.plan import *
-from math import ceil
-
+from services.planing_service import *
+from services.user_service import *
 
 planings_bp = Blueprint("planings", __name__)
 
