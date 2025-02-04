@@ -7,6 +7,6 @@ class ReplacementRequest(BaseModel):
     owner = CharField()
     itemId = IntegerField()
     quantity = IntegerField()
-    status = CharField(default='created')
+    status = CharField(default="Ожидает ответа")
 
 

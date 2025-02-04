@@ -26,3 +26,19 @@ def get_replacement_requests():
     return jsonify({'status': "authError"})
 
 
+@replacement_requests_bp.route('/acceptReplacementRequest', methods=['POST'])
+def accept_replacement_request():
+    data = request.json
+    if isUser(data['username'], data['password']):
+        acceptReplacementRequest(data["id"])
+        return jsonify({'status': 'ok'})
+    return jsonify({'status': "authError"})
+
+
+@replacement_requests_bp.route('/declineReplacementRequest', methods=['POST'])
+def decline_replacement_request():
+    data = request.json
+    if isUser(data['username'], data['password']):
+        declineReplacementRequest(data["id"])
+        return jsonify({'status': 'ok'})
+    return jsonify({'status': "authError"})
