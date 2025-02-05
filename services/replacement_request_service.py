@@ -15,7 +15,7 @@ def createReplacementRequest(owner, itemId, quantity):
         item.delete_instance()
     item = createItem(owner, newItemType.type, quantity)
     
-    request: ReplacementRequest = ReplacementRequest.get_or_none(ReplacementRequest.type == newItemType.type, ReplacementRequest.owner == owner)
+    request: ReplacementRequest = ReplacementRequest.get_or_none(ReplacementRequest.type == newItemType.type, ReplacementRequest.owner == owner, ReplacementRequest.status == "Ожидает ответа")
     if request:
         request.quantity += quantity
         request.save()
@@ -44,27 +44,32 @@ def getReplacementsRequests(owner):
 
 
 def acceptReplacementRequest(id):
-    item = getItem(None, "Новый")
     request: ReplacementRequest = ReplacementRequest.get_by_id(id)
     curItemType = getItemType(request.type)
-    required = {"name": curItemType.name, "description": curItemType.description, "quantity": request.quantity - item.quantity}
+    newItemType = createItemType(curItemType.name, curItemType.description)
+    item = getItem(None, newItemType.type)
+    quantity = 0
+    if item:
+        quantity = item.quantity
+    
+    required = {"name": curItemType.name, "description": curItemType.description, "quantity": request.quantity - quantity}
     
     if not item or item.quantity < request.quantity:
-        return 'notEnoughItems'
-
+        return 'notEnoughItems', required
+    item.quantity -= request.quantity
+    item.save()
+    createItem(None, request.type, request.quantity)
     request.status = "Одобрено" #accept request
     request.save()
-
-    curItemType = getItemType(request.type)    #substract quantity
+    
     item = getItem(request.owner, request.type)
     item.quantity -= request.quantity
     item.save()
     if item.quantity == 0:
         item.delete_instance()
-    
-    newItemType = createItemType(curItemType.name, curItemType.description) #create new item
+     #create new item
     createItem(request.owner, newItemType.type, request.quantity)
-    return 'ok'
+    return 'ok', None
 
 
 def declineReplacementRequest(id):
