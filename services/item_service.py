@@ -24,7 +24,6 @@ def editItem(itemId, newName, newDescription, newQuantity) -> None:
     item.type = itemType.type
     item.quantity = newQuantity
     item.save()
-    #TODO delete itemType
 
 
 def deleteItem(itemId, quantity):

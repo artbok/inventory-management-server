@@ -8,7 +8,7 @@ def createReplacementRequest(owner, itemId, quantity):
     item: Item = Item.get_by_id(itemId)
     item.quantity -= quantity
     item.save()
-    
+
     itemType = getItemType(item.type)
     newItemType = createItemType(itemType.name, itemType.description, "Сломанный")
     if item.quantity == 0:
@@ -24,7 +24,7 @@ def createReplacementRequest(owner, itemId, quantity):
     
 
 
-def getReplacementsRequests(owner):
+def getReplacementRequests(owner):
     items = []
     if owner == None:
         requests = ReplacementRequest.select()
@@ -37,7 +37,7 @@ def getReplacementsRequests(owner):
             'name': itemType.name,
             'description': itemType.description,
             'quantity': replacementRequest.quantity,
-            'status': replacementRequest.status, #should be deleted
+            'status': replacementRequest.status, 
             'id': replacementRequest.id
         })
     return items
@@ -59,7 +59,7 @@ def acceptReplacementRequest(id):
     item.quantity -= request.quantity
     item.save()
     createItem(None, request.type, request.quantity)
-    request.status = "Одобрено" #accept request
+    request.status = "Одобрено" 
     request.save()
     
     item = getItem(request.owner, request.type)
@@ -67,7 +67,6 @@ def acceptReplacementRequest(id):
     item.save()
     if item.quantity == 0:
         item.delete_instance()
-     #create new item
     createItem(request.owner, newItemType.type, request.quantity)
     return 'ok', None
 
