@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-from models.user import * 
 from services.item_request_service import *
 from services.user_service import isUser
 
@@ -7,7 +6,7 @@ item_requests_bp = Blueprint("item_requests", __name__)
 
 
 @item_requests_bp.route('/newItemRequest', methods=['POST'])
-def newItemRequest():
+def new_itemRequest():
     data = request.json
     if isUser(data["username"], data["password"]):
         createItemRequest(data["itemId"], data["itemName"], data["itemDescription"], data["itemQuantity"], data["username"])
@@ -16,7 +15,7 @@ def newItemRequest():
 
 
 @item_requests_bp.route('/getItemsRequests', methods=['POST'])
-def itemsRequests():
+def items_requests():
     data = request.json
     if isUser(data['username'], data['password']):
         items = getItemsRequests(data['owner'])
