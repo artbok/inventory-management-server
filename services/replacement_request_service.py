@@ -3,6 +3,7 @@ from models.replacement_request import ReplacementRequest
 from services.item_type_service import getItemType, createItemType
 from services.item_service import createItem, Item, getItem
 
+
 def createReplacementRequest(owner, itemId, quantity):
     item: Item = Item.get_by_id(itemId)
     item.quantity -= quantity
@@ -14,12 +15,12 @@ def createReplacementRequest(owner, itemId, quantity):
         item.delete_instance()
     item = createItem(owner, newItemType.type, quantity)
     
-    request: ReplacementRequest = ReplacementRequest.get_or_none(ReplacementRequest.itemId == item.id, ReplacementRequest.owner == owner)
+    request: ReplacementRequest = ReplacementRequest.get_or_none(ReplacementRequest.type == newItemType.type, ReplacementRequest.owner == owner)
     if request:
         request.quantity += quantity
         request.save()
     else:
-        ReplacementRequest.create(owner = owner, itemId = item.id, quantity = quantity)
+        ReplacementRequest.create(owner = owner, type = newItemType.type, quantity = quantity)
     
 
 
@@ -31,34 +32,39 @@ def getReplacementsRequests(owner):
         requests = ReplacementRequest.select().where(ReplacementRequest.owner == owner)
     
     for replacementRequest in requests:
-        item: Item = Item.get_by_id(replacementRequest.itemId)
-        itemType = getItemType(item.type)
+        itemType = getItemType(replacementRequest.type)
         items.append({
             'name': itemType.name,
             'description': itemType.description,
             'quantity': replacementRequest.quantity,
-            'status': replacementRequest.status 
+            'status': replacementRequest.status, #should be deleted
+            'id': replacementRequest.id
         })
     return items
 
 
 def acceptReplacementRequest(id):
+    item = getItem(None, "Новый")
     request: ReplacementRequest = ReplacementRequest.get_by_id(id)
-    request.status = "Одобрено"
+    curItemType = getItemType(request.type)
+    required = {"name": curItemType.name, "description": curItemType.description, "quantity": request.quantity - item.quantity}
+    
+    if not item or item.quantity < request.quantity:
+        return 'notEnoughItems'
+
+    request.status = "Одобрено" #accept request
     request.save()
-    item: Item = Item.get_by_id(request.itemId)
-    curItemType = getItemType(item.type)
-    newItemType = createItemType(curItemType.name, curItemType.description)
-    newItem = getItem(request.owner, newItemType.type)
-    if newItem:
-        newItem.quantity += request.quantity
-        newItem.save()
-    else:
-        createItem(request.owner, newItemType.type, request.quantity)
+
+    curItemType = getItemType(request.type)    #substract quantity
+    item = getItem(request.owner, request.type)
     item.quantity -= request.quantity
     item.save()
     if item.quantity == 0:
         item.delete_instance()
+    
+    newItemType = createItemType(curItemType.name, curItemType.description) #create new item
+    createItem(request.owner, newItemType.type, request.quantity)
+    return 'ok'
 
 
 def declineReplacementRequest(id):

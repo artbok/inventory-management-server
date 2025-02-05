@@ -30,8 +30,8 @@ def get_replacement_requests():
 def accept_replacement_request():
     data = request.json
     if isUser(data['username'], data['password']):
-        acceptReplacementRequest(data["id"])
-        return jsonify({'status': 'ok'})
+        status = acceptReplacementRequest(data["id"])
+        return jsonify({'status': status})
     return jsonify({'status': "authError"})
 
 
