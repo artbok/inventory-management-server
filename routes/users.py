@@ -6,7 +6,7 @@ users_bp = Blueprint("users", __name__)
 
 
 @users_bp.route('/newUser', methods=['POST'])
-def newUser():
+def new_user():
     data = request.json
     if getUser(data["username"]):
         return jsonify({'status': 'userAlreadyExists'})
@@ -15,7 +15,7 @@ def newUser():
 
 
 @users_bp.route('/authUser', methods=['POST'])
-def authUser():
+def auth_user():
     data = request.json 
     if not isUser(data["username"], data["password"]):
         return jsonify({'status': 'invalidLogin'})

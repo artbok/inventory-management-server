@@ -1,6 +1,4 @@
 from flask import Blueprint, request, jsonify
-from models.user import * 
-from models.replacement_request import *
 from services.user_service import isUser
 from services.replacement_request_service import *
 
@@ -9,7 +7,7 @@ replacement_requests_bp = Blueprint("replacement_requests", __name__)
 
 
 @replacement_requests_bp.route('/newReplacementRequest', methods=['POST'])
-def newReplacementRequest():
+def new_replacementRequest():
     data = request.json
     if isUser(data['username'], data['password']): 
         createReplacementRequest(data["owner"], data["itemId"], data["quantity"])

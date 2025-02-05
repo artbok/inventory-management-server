@@ -6,7 +6,7 @@ planings_bp = Blueprint("planings", __name__)
 
 
 @planings_bp.route('/newPlaning', methods=['POST'])
-def newPlaning():
+def new_planing():
     data = request.json
     status = isAdmin(data["username"], data["password"])
     if status =='ok':
@@ -14,7 +14,7 @@ def newPlaning():
     return jsonify({'status': status})
 
 @planings_bp.route('/changePlanningStatus', methods=['POST'])
-def setPlanningStatus():
+def set_planningStatus():
     data = request.json
     status = isAdmin(data["username"], data["password"])
     if status =='ok':
