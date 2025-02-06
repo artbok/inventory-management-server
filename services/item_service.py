@@ -1,8 +1,7 @@
 from peewee import *
 from models.item import Item
 from services.item_type_service import getItemType, createItemType
-from models.item_type import ItemType
-
+from report_service import createReport
 
 def getItem(owner, type) -> Item:
     return Item.get_or_none(Item.owner == owner, Item.type == type)
@@ -14,6 +13,8 @@ def createItem(owner, type, quantity) -> Item:
        return Item.create(owner = owner, type = type, quantity = quantity)
     item.quantity += quantity
     item.save()
+    itemType = getItemType(item.type)
+    createReport(f"{owner} создал {itemType.name} в количестве {quantity}, с описанием {itemType.description}")
     return item
 
 
@@ -24,15 +25,19 @@ def editItem(itemId, newName, newDescription, newQuantity) -> None:
     item.type = itemType.type
     item.quantity = newQuantity
     item.save()
+    itemType = getItem(item.type)
+    createReport(f"{item.owner} отредактировал {status.name} в количестве {newQuantity}, с описанием{newDescription}")
 
 
 def deleteItem(itemId, quantity):
     item: Item = Item.get_by_id(itemId)
     item.quantity -= quantity
     item.save()
+    itemType = getItemType(item.type)
+    createReport(f"{item.owner} удалил {itemType.name} в количестве {quantity}, с описанием{itemType.description}")
     if quantity == 0:
         item.delete_instance()
-#TODO delete itemType
+
     
 
 def giveItem(itemId, quantity, user):
@@ -40,6 +45,8 @@ def giveItem(itemId, quantity, user):
     item.quantity -= quantity
     item.save()
     createItem(user, item.type, quantity)
+    itemType = getItemType(item.type)
+    createReport(f"{item.owner} получил {itemType.name} с описанием {itemType.description}, в количестве {item.quantity}")
 
 
 def changeStatus(itemId, quantity, status):
@@ -48,6 +55,8 @@ def changeStatus(itemId, quantity, status):
     newItemType = createItemType(curItemType.name, curItemType.description, status)
     item.quantity -= quantity
     createItem(item.owner, newItemType.type, quantity)
+    itemType = getItemType(item.type)
+    createItemType(f"{item.owner} поменял статус {itemType.name} с описанием {itemType.description}, в количестве {item.quantity}")
 
 
 def getUserItems(owner, page) -> list[map]:
