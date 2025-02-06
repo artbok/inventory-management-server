@@ -1,6 +1,11 @@
 from flask import Blueprint, request, jsonify
 from services.item_request_service import *
 from services.user_service import isUser
+from math import ceil
+from services.item_service import *
+from services.item_type_service import *
+from services.user_service import *
+from services.item_request_service import *
 
 item_requests_bp = Blueprint("item_requests", __name__)
 
@@ -38,4 +43,14 @@ def decline_item_request():
     if isUser(data['username'], data['password']):
         declineItemRequest(data["id"])
         return jsonify({'status': 'ok'})
+    return jsonify({'status': "authError"})
+
+
+@item_requests_bp.route('/getStorageItems', methods=['POST'])
+def get_storage_items():
+    data = request.json
+    if isUser(data["username"], data["password"]): 
+        totalPages = ceil(ItemType.select().count() / 10)
+        items = getStorageItems(data["username"], int(data["page"]))
+        return jsonify({'status': 'ok', "totalPages": totalPages, 'data': items})
     return jsonify({'status': "authError"})

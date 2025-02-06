@@ -9,8 +9,13 @@ def createItemRequest(id, name, description, quantity, owner) -> None:
     if id:
         type = Item.get_by_id(id).type
     else:
-        type = createItemType(name, description)
-    ItemRequest.create(type = type, quantity = quantity, owner = owner)
+        type = createItemType(name, description).type
+    itemRequest: ItemRequest = ItemRequest.get_or_none(ItemRequest.owner == owner, ItemRequest.type == type, ItemRequest.status == 'Ожидает ответа')
+    if itemRequest:
+        itemRequest.quantity += quantity
+        itemRequest.save()
+    else: 
+        ItemRequest.create(type = type, quantity = quantity, owner = owner)
 
 
 def getItemsRequests(owner) -> list[ItemRequest]:
@@ -31,6 +36,26 @@ def getItemsRequests(owner) -> list[ItemRequest]:
         })
     return requests
 
+
+def getStorageItems(username, page) -> list[map]:
+    items = []
+    for item in Item.select().where(Item.owner == None).paginate(page, 10):
+        type = item.type
+        itemType = getItemType(type)
+        requestsCounter= 0
+        itemRequest = ItemRequest.get_or_none(ItemRequest.type == type, ItemRequest.owner == username, ItemRequest.status == "Ожидает ответа")
+        if itemRequest:
+            requestsCounter += itemRequest.quantity
+        items.append({
+            'id': item.id,
+            'type': type,
+            'name': itemType.name,
+            'description': itemType.description,
+            'quantity': item.quantity,
+            'status': itemType.status,
+            'requestsCounter': requestsCounter
+        })
+    return items
 
 def acceptItemRequest(id):
     request: ItemRequest = ItemRequest.get_by_id(id)
