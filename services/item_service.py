@@ -1,7 +1,7 @@
 from peewee import *
 from models.item import Item
 from services.item_type_service import getItemType, createItemType
-from report_service import createReport
+from services.report_service import createReport
 
 def getItem(owner, type) -> Item:
     return Item.get_or_none(Item.owner == owner, Item.type == type)
@@ -54,9 +54,9 @@ def changeStatus(itemId, quantity, status):
     curItemType = getItemType(item.type)
     newItemType = createItemType(curItemType.name, curItemType.description, status)
     item.quantity -= quantity
+    item.save()
     createItem(item.owner, newItemType.type, quantity)
-    itemType = getItemType(item.type)
-    createItemType(f"{item.owner} поменял статус {itemType.name} с описанием {itemType.description}, в количестве {item.quantity}")
+    createReport(f"{item.owner} поменял статус {newItemType.name} с описанием {newItemType.description}, в количестве {item.quantity}")
 
 
 def getUserItems(owner, page) -> list[map]:
