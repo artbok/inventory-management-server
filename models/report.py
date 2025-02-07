@@ -5,6 +5,5 @@ from datetime import datetime
 
 class Report(BaseModel):
     id = AutoField()
-    operationType = CharField()
     text = CharField()
     date = DateField(default=datetime.now())
