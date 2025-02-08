@@ -23,4 +23,4 @@ def add_headers(response):
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
     return response
 
-app.run()
+app.run(host='0.0.0.0')
