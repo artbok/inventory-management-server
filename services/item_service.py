@@ -13,8 +13,6 @@ def createItem(owner, type, quantity) -> Item:
        return Item.create(owner = owner, type = type, quantity = quantity)
     item.quantity += quantity
     item.save()
-    itemType = getItemType(item.type)
-    createReport(f"{owner} создал {itemType.name} в количестве {quantity}, с описанием {itemType.description}")
     return item
 
 
@@ -25,17 +23,15 @@ def editItem(itemId, newName, newDescription, newQuantity) -> None:
     item.type = itemType.type
     item.quantity = newQuantity
     item.save()
-    itemType = getItem(item.type)
-    createReport(f"{item.owner} отредактировал {status.name} в количестве {newQuantity}, с описанием{newDescription}")
+   
 
 
 def deleteItem(itemId, quantity):
     item: Item = Item.get_by_id(itemId)
     item.quantity -= quantity
     item.save()
-    itemType = getItemType(item.type)
-    createReport(f"{item.owner} удалил {itemType.name} в количестве {quantity}, с описанием{itemType.description}")
-    if quantity == 0:
+ 
+    if item.quantity == 0:
         item.delete_instance()
 
     
@@ -45,18 +41,15 @@ def giveItem(itemId, quantity, user):
     item.quantity -= quantity
     item.save()
     createItem(user, item.type, quantity)
-    itemType = getItemType(item.type)
-    createReport(f"{item.owner} получил {itemType.name} с описанием {itemType.description}, в количестве {item.quantity}")
 
-
-def changeStatus(itemId, quantity, status):
+def changeStatus(itemId, quantity, status, username):
     item: Item = Item.get_by_id(itemId)
     curItemType = getItemType(item.type)
     newItemType = createItemType(curItemType.name, curItemType.description, status)
     item.quantity -= quantity
     item.save()
     createItem(item.owner, newItemType.type, quantity)
-    createReport(f"{item.owner} поменял статус {newItemType.name} с описанием {newItemType.description}, в количестве {item.quantity}")
+    
 
 
 def getUserItems(owner, page) -> list[map]:

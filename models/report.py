@@ -6,4 +6,4 @@ from datetime import datetime
 class Report(BaseModel):
     id = AutoField()
     text = CharField()
-    date = DateField(default=datetime.now())
+    date = DateTimeField(default=datetime.now())
