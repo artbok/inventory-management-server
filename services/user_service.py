@@ -35,7 +35,5 @@ def getUsers() -> list[User]:
 
 if not User.table_exists():
     User.create_table()
-    createUser("bebra", "12345", 2)
-    createUser("bebrobruh", "12345", 1)
     print("Table 'User' created")
 

@@ -42,13 +42,15 @@ def giveItem(itemId, quantity, user):
     item.save()
     createItem(user, item.type, quantity)
 
-def changeStatus(itemId, quantity, status, username):
+def changeStatus(itemId, quantity, status):
     item: Item = Item.get_by_id(itemId)
     curItemType = getItemType(item.type)
     newItemType = createItemType(curItemType.name, curItemType.description, status)
     item.quantity -= quantity
     item.save()
     createItem(item.owner, newItemType.type, quantity)
+    if item.quantity == 0:
+        item.delete_instance()
     
 
 
